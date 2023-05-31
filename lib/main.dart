@@ -1,4 +1,5 @@
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:chatview/chatview.dart';
 import 'package:flutter/material.dart';
 import 'package:social_media_recorder/audio_encoder_type.dart';
 import 'package:social_media_recorder/screen/social_media_recorder.dart';
@@ -7,6 +8,7 @@ import 'package:wave/config.dart';
 import 'package:wave/wave.dart';
 import 'package:siri_wave/siri_wave.dart';
 import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
+import 'package:chatview/src/widgets/chat_bubble_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,34 +21,35 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: UIDemoPage(),
-    );
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          // This is the theme of your application.
+          //
+          // Try running your application with "flutter run". You'll see the
+          // application has a blue toolbar. Then, without quitting the app, try
+          // changing the primarySwatch below to Colors.green and then invoke
+          // "hot reload" (press "r" in the console where you ran "flutter run",
+          // or simply save your changes to "hot reload" in a Flutter IDE).
+          // Notice that the counter didn't reset back to zero; the application
+          // is not restarted.
+          primarySwatch: Colors.blue,
+        ),
+        home: Scaffold(
+          body: const UIDemoPage(),
+        ));
   }
 }
 
 const marginHorizontal = 20.0;
 
 class UIDemoPage extends StatefulWidget {
-  UIDemoPage({Key? key}) : super(key: key);
+  const UIDemoPage({Key? key}) : super(key: key);
 
   @override
   State<UIDemoPage> createState() => _UIDemoPageState();
 }
 
-class _UIDemoPageState extends State<UIDemoPage> {
+class _UIDemoPageState extends State<UIDemoPage> with TickerProviderStateMixin {
   static const _backgroundColor = Color(0xFFF15BB5);
 
   static const _colors = [
@@ -64,15 +67,34 @@ class _UIDemoPageState extends State<UIDemoPage> {
     0.36,
   ];
 
+  AnimationController? _animationController;
+  Animation<Offset>? _slideAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.0),
+      end: const Offset(-0.2, 0.0),
+    ).animate(
+      CurvedAnimation(
+        curve: Curves.easeOut,
+        parent: _animationController!,
+      ),
+    );
   }
 
   bool isRecording = false;
 
   @override
   Widget build(BuildContext context) {
+    final message = Message(
+        message: 'hello, text', createdAt: DateTime.now(), sendBy: 'hello');
     final controller = SiriWaveController(
       amplitude: 1,
       color: Colors.red,
@@ -207,6 +229,13 @@ class _UIDemoPageState extends State<UIDemoPage> {
           height: 100,
           strokeWidth: 2,
           width: 5 * 5,
+        ),
+        ChatBubbleWidget(
+          slideAnimation: _slideAnimation,
+          key: message.key,
+          message: message,
+          onLongPress: (p0, p1) {},
+          onSwipe: (message) {},
         ),
         Expanded(child: Container()),
         Padding(
